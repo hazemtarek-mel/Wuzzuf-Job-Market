@@ -1,0 +1,56 @@
+name: Daily Wuzzuf Scraper
+
+# Trigger: Run every day at 6:00 AM UTC (8:00 AM Cairo)
+# and allow manual trigger via the "Actions" tab (workflow_dispatch)
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  scrape-and-update:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Get the repository code
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      # 2. Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      # 3. Install necessary libraries
+      - name: Install dependencies
+        run: |
+          pip install pandas requests beautifulsoup4 lxml
+
+      # 4. Run the scraper
+      # This overwrites data/wuzzuf_jobs_raw.csv
+      - name: Run Scraper
+        run: python scraper.py
+
+      # 5. Commit and Push changes
+      # This updates the EXISTING file in the repo (Overwrites old data)
+      - name: Commit and Push
+        run: |
+          git config --global user.name "GitHub Action Bot"
+          git config --global user.email "actions@github.com"
+          
+          # Check if there are changes to the data file
+          git add data/wuzzuf_jobs_raw.csv
+          
+          # Only commit if data actually changed
+          # 'git diff --staged --quiet' returns 1 if there are changes
+          if ! git diff --staged --quiet; then
+            git commit -m "🔄 Daily Data Refresh: $(date)"
+            git push
+            echo "✅ Data successfully updated and pushed."
+          else
+            echo "⚠️ No changes detected in data (No new jobs found or data identical)."
+          fi

@@ -1,0 +1,16 @@
+# Python internals
+__pycache__/
+*.pyc
+
+# Virtual Environment
+venv/
+env/
+
+# Data
+# We Keep 'wuzzuf_jobs_raw.csv' because the GitHub Action updates it.
+# We Ignore 'wuzzuf_jobs_clean.csv' because the App generates it automatically.
+data/wuzzuf_jobs_clean.csv
+
+# Logs & Debug
+wuzzuf_debug.html
+*.log
